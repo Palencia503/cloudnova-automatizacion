@@ -1,27 +1,31 @@
 #!/bin/bash
-# Script para crear un usuario nuevo
 
-# Verificar si se ejecuta como root
-if [[ $EUID -ne 0 ]]; then
-   echo "Este script debe ejecutarse como root (sudo)"
-   exit 1
+# Verificar si el script se ejecuta como root (superusuario)
+if [ "$EUID" -ne 0 ]; then
+  echo "Por favor, ejecuta este script con sudo (ej: sudo ./crear_usuario.sh)"
+  exit 1
 fi
 
-# Nombre del usuario a crear (se puede pasar como parámetro: $1)
-USUARIO=$1
+# Solicitar el nombre de usuario
+read -p "Introduce el nombre del nuevo usuario: " nombre_usuario
 
-if [ -z "$USUARIO" ]; then
-    echo "Uso: $0 <nombre_usuario"
-    exit 1
+# Verificar si el nombre de usuario está vacío
+if [ -z "$nombre_usuario" ]; then
+  echo "Error: El nombre de usuario no puede estar vacío."
+  exit 1
 fi
 
-# Crear el usuario, -m crea el directorio home, -s define el shell
-useradd -m -s /bin/bash "$USUARIO"
-
-if [ $? -eq 0 ]; then
-    echo "Usuario '$USUARIO' creado exitosamente."
-    echo "Establezca la contraseña para '$USUARIO':"
-    passwd "$USUARIO" # Solicitará la contraseña interactivamente
+# Verificar si el usuario ya existe
+if id "$nombre_usuario" &>/dev/null; then
+    echo "El usuario '$nombre_usuario' ya existe."
 else
-    echo "Error al crear el usuario '$USUARIO'."
+    # Crear el usuario con directorio home (-m) y shell por defecto
+    useradd -m "$nombre_usuario"
+    echo "Usuario '$nombre_usuario' creado exitosamente."
+
+    # Solicitar y establecer la contraseña
+    echo "Estableciendo la contraseña para el usuario '$nombre_usuario':"
+    passwd "$nombre_usuario"
 fi
+
+exit 0
